@@ -1,0 +1,86 @@
+import {HttpClient,json} from 'aurelia-fetch-client';
+import { inject } from "aurelia-framework";
+
+import constants from './constants';
+
+@inject(HttpClient)
+export class FetchUtils {
+    constructor(httpClient) {
+        this.httpClient = new HttpClient();
+    }
+
+    customFetch(url, settings, okCallBack, errorCallBack) {
+        let redirectUri = undefined;
+
+        var jwtToken = window.sessionStorage.getItem(constants.oauth.storageJwtKey);
+        settings.headers = {};
+        settings.headers[constants.headers.jwtAuthorization] = jwtToken;
+
+        this.httpClient.fetch(url, settings)
+            .then(response => {
+                redirectUri = response.headers.get('redirect_url');
+                return response.json();
+            }).then(result => {
+                if (result.status_code === constants.httpStatus.ACCESS_DENIED && redirectUri) {
+                    if (redirectUri === constants.oauth.refreshTokenUrl) {
+                        this.refreshJwtToken(url, settings, okCallBack, errorCallBack);
+                    } else {
+                        this.getCodeFromAuthServer(redirectUri, url, settings, okCallBack, errorCallBack);
+                    }
+                } else {
+                    okCallBack(result);
+                }
+            }).catch(error => {
+                errorCallBack(error);
+            });
+    }
+
+    getCodeFromAuthServer(redirectUri, url, settings, okCallBack, errorCallBack) {
+        let authCode = undefined;
+
+        this.httpClient.fetch(redirectUri, {
+            credentials: 'include',
+            cache: 'no-store'
+        })
+            .then(response => response.json())
+            .then(result => {
+                window.sessionStorage.setItem(constants.oauth.storageUserInfo, result);
+                authCode = result.code;
+                this.getJwtToken(authCode, url, settings, okCallBack, errorCallBack);
+            }).catch(error => {
+                console.log(error);
+            });
+    }
+
+    getJwtToken(authCode, url, settings, okCallBack, errorCallBack) {
+        let jwtToken = undefined;
+
+        this.httpClient.fetch('/tokeninfo?authcode=' + authCode)
+            .then(response => response.json())
+            .then(tokenResult => {
+                jwtToken = result.data;
+                window.sessionStorage.setItem(constants.oauth.storageJwtKey, jwtToken);
+                this.customFetch(url, settings, okCallBack, errorCallBack);
+            })
+            .catch(error => {
+                console.log('Error retrieving token ' + auth_code);
+            });
+    }
+
+    refreshJwtToken(url, settings, okCallBack, errorCallBack) {
+        let jwtToken = window.sessionStorage.getItem(constants.oauth.storageJwtKey);
+
+        var resfreshReqSettings = {};
+        resfreshReqSettings.headers = {};
+        resfreshReqSettings.headers[constants.headers.jwtAuthorization] = jwtToken;
+
+        this.httpClient.fetch(constants.oauth.refreshTokenUrl, resfreshReqSettings)
+            .then(response => response.json())
+            .then(result => {
+                window.sessionStorage.setItem(constants.oauth.storageJwtKey, result.data);
+                this.customFetch(url, settings, okCallBack, errorCallBack);
+            }).catch(error => {
+                console.log('Error retrieving code');
+            });
+    }
+}
