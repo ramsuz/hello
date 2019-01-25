@@ -1,0 +1,79 @@
+<template>
+
+	<div>
+		<table class="table table-striped table-bordered small-font-table table-compressed table-view-config" style="width: calc(100% - 1.2em);">
+			<thead>
+				<tr if.bind="datarow.title">
+					<th colspan="${datarow.columns.length}" css="text-align: ${datarow.titleAlign?datarow.titleAlign:'center'}; background-color: ${datarow.titleColor?datarow.titleColor:'#67838B'};">
+						${datarow.title & t}
+					</th>
+				</tr>
+				<tr>
+					<th id="${col.property}" repeat.for="col of datarow.columns" css="width: ${col.width}; text-align: ${col.titlealign?col.titlealign:'center'}; display: ${col.hidden?'none':''};" click.delegate="col.noSort?null:sortColumn(col)">
+						${col.header & t}
+					</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	<div id="datatable-scroll-div" css="position: relative; top: -20px; overflow-y: scroll; max-height: ${datarow.height}" show.bind="searchResults" scroll.trigger="scrollTable($event)">
+		<table class="table table-striped table-bordered small-font-table table-compressed table-view-config"
+			style="word-wrap: break-word; word-break: break-all;">
+			<tbody>
+				<tr repeat.for="row of searchResults" data-part="headerRow" click.delegate="rowClick(row, datarow.id)" dblclick.delegate="rowDblClick(row, datarow.id)"
+						style.bind="row.isSelected ? 'background: lightblue' : ''">
+					<td repeat.for="col of datarow.columns" css="width: ${col.width}; display: ${col.display}; text-align: ${col.textalign?col.textalign:''}; vertical-align: ${col.verticalalign?col.verticalalign:''};"
+						style.bind="col.style">
+						<div if.bind="col.html" innerhtml.bind="col.html" click.delegate="html(row)" show.bind="col.dependency?row[col.dependency]:true"></div>
+						<div if.bind="col.htmlText" innerhtml.bind="row[col.property]" show.bind="col.dependency?row[col.dependency]:true"></div>
+						<div if.bind="col.button">
+							<button class="btn btn-default" click.delegate="button(row)" show.bind="col.dependency?row[col.dependency]:true"
+								disabled.bind="(disableflag || datarow.isDisabled || row[datarow.disabler] || datarow.enabler?!row[datarow.enabler]:false || col.disabled)">
+								<span class.bind="col.button"></span></button>
+						</div>
+						<div if.bind="col.checkbox && !col.multiInput" style="display: inline;">
+							<input type="checkbox" class="checkbox" style="display: inline;" css="margin: ${col.margin};"
+								checked.bind="row[col.property]" show.bind="col.dependency?row[col.dependency]:true"
+								disabled.bind="(disableflag || datarow.isDisabled || row[datarow.disabler] || datarow.enabler?!row[datarow.enabler]:false || col.disabled)"/>
+						</div>
+						<div if.bind="col.checkbox && col.multiInput" style="display: inline;">
+							<input type="checkbox" class="checkbox" style="display: inline;" css="margin: ${col.margin};"
+								checked.bind="row[col.property]?true:false" show.bind="col.dependency?row[col.dependency]:true"
+								disabled.bind="(disableflag || datarow.isDisabled || row[datarow.disabler] || datarow.enabler?!row[datarow.enabler]:false || col.disabled)"/>
+						</div>
+						<div if.bind="col.text" style="display: inline;">
+							<input type="text" class="form-control" style="display: inline;" style.bind="!col.multiInput?'':row[col.property]?'':'visibility: hidden'" css="width: ${col.textwidth}; margin: ${col.margin};" keydown.trigger="inputKeydown($event, $index)" value.bind="row[col.property]"
+								maxlength.bind="col.maxlength?col.maxlength:524288" show.bind="col.dependency?row[col.dependency]:true"
+								disabled.bind="disableflag || col.readonly?false:(datarow.isDisabled || row[datarow.disabler] || datarow.enabler?!row[datarow.enabler]:false || col.disabled)"
+								readonly.bind="col.readonly"/>
+						</div>
+						<div if.bind="col.textarea">
+							<textarea style="width: 60%; height: 100%; margin: 0px auto; display: block; min-height: 70px;" value.bind="row[col.property]"
+								disabled.bind="disableflag || col.readonly?false:(datarow.isDisabled || row[datarow.disabler] || datarow.enabler?!row[datarow.enabler]:false || col.disabled)"
+								readonly.bind="col.readonly" show.bind="col.dependency?row[col.dependency]:true"></textarea>
+						</div>
+						<div if.bind="col.ellipsis"
+							title="${row[col.property] & t}" data-toggle="tooltip">...</div>
+
+						<div if.bind="!col.html && !col.htmlText && !col.checkbox && !col.button && !col.text && !col.textarea && !col.locale && !col.ellipsis && !col.overflow"
+							title="${col.tooltip?row[col.tooltip].join('<br/>'):row[col.property]}" data-toggle="tooltip" class.bind="col.divClass">${row[col.property]}</div>
+						<div if.bind="!col.html && !col.htmlText && !col.checkbox && !col.button && !col.text && !col.textarea && col.locale && !col.ellipsis && !col.overflow"
+							title="${row[col.property] & t}" data-toggle="tooltip" class.bind="col.divClass">${row[col.property] & t}</div>
+
+						<div if.bind="col.overflow" title="${row[col.property]}" data-toggle="tooltip" style="display:inline;">${row[col.property]}</div>
+					</td>
+				</tr>
+
+					<tr if.bind="searchResults.length == 0">
+					<td colspan="100%">
+						${'grid_empty_message' & t}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+
+
+</template>
+
