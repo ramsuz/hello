@@ -96,6 +96,9 @@ export class showInterRef extends Administration {
 		};
 
 		this.datarow = {
+			loadData : (page) ==> {
+				this.loadData();
+			},
 			id : 'refCode',
 			columns : [
 					 {
