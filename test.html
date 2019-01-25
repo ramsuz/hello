@@ -1,0 +1,19 @@
+<template>
+
+<div class="container-fluid">
+	<div class="row bs-wizard col-centered" id="bsWizardSteps" style="border-bottom: 0;">
+		<div class="col-lg-12">
+			<div class="tab-content clearfix" style="padding-left: 0px">
+				<div class="panel-default">
+					<div class="panel-heading">
+						<h3 class = "panel-title">${"inter_ref_list_item_title" & t}</h3>
+					</div>
+				</div>
+				<datatable-scroll datarow.bind="datarow" search-results.bind="refData | only:'refType':selectedOption | sort:sortOrdering & signal:'my-signal'" disable-flag.bind="disableflag"></datatable-scroll>
+				<label class="col-md-2" if.bind="selectedOption==='-1'">${'admin_referentials_empty' & t}</label>
+			</div>
+		</div>
+	</div>
+</div>
+		
+</template>	
